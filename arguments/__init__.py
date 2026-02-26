@@ -50,6 +50,9 @@ class ModelParams(ParamGroup):
         self.use_global_shs = False
         self.use_headlight = False
         self.global_shs_degree = 3
+        self.semantic_config = ""
+        self.semantic_name = ""
+        self.semantic_id = -1
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

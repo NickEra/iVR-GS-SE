@@ -1,0 +1,83 @@
+dataset: carp
+description: "CT scan of a carp fish segmented into 7 semantic components"
+components:
+  - tf_id: "TF00"
+    semantic_id: 0
+    name: "head"
+    parent: "head_region"
+    aliases: ["头部", "head", "skull"]
+    description: "Protects the brain and sensory organs"
+    default_visual: { color: [0.9, 0.7, 0.6], opacity: 1.0 }
+
+  - tf_id: "TF01"
+    semantic_id: 1
+    name: "pectoral_fin"
+    parent: "fins"
+    aliases: ["胸鳍", "pectoral fin", "side fin"]
+    description: "Used for steering, braking and hovering"
+    default_visual: { color: [0.9, 0.5, 0.1], opacity: 1.0 }
+
+  - tf_id: "TF02"
+    semantic_id: 2
+    name: "spinal_cord_and_ribs"
+    parent: "skeleton"
+    aliases: ["脊椎和肋骨", "spine", "ribs", "backbone", "骨骼"]
+    description: "Main structural support of the skeleton"
+    default_visual: { color: [0.95, 0.95, 0.85], opacity: 1.0 }
+
+  - tf_id: "TF03"
+    semantic_id: 3
+    name: "anal_fin"
+    parent: "fins"
+    aliases: ["臀鳍", "anal fin", "bottom fin"]
+    description: "Helps with stability during swimming"
+    default_visual: { color: [0.9, 0.2, 0.2], opacity: 1.0 }
+
+  - tf_id: "TF04"
+    semantic_id: 4
+    name: "ventral_fin"
+    parent: "fins"
+    aliases: ["腹鳍", "ventral fin", "pelvic fin"]
+    description: "Used for steering, braking and hovering"
+    default_visual: { color: [0.7, 0.2, 0.7], opacity: 1.0 }
+
+  - tf_id: "TF05"
+    semantic_id: 5
+    name: "dorsal_fin"
+    parent: "fins"
+    aliases: ["背鳍", "dorsal fin", "top fin"]
+    description: "Prevents rolling, provides stability"
+    default_visual: { color: [0.2, 0.4, 0.9], opacity: 1.0 }
+
+  - tf_id: "TF06"
+    semantic_id: 6
+    name: "caudal_fin"
+    parent: "fins"
+    aliases: ["尾鳍", "tail fin", "caudal fin", "尾巴"]
+    description: "Primary fin for propulsion and steering"
+    default_visual: { color: [0.2, 0.8, 0.2], opacity: 1.0 }
+
+groups:
+  - name: "fins"
+    children: ["pectoral_fin", "anal_fin", "ventral_fin", "dorsal_fin", "caudal_fin"]
+    aliases: ["鱼鳍", "all fins", "所有鳍"]
+    description: "All fin structures of the carp"
+  - name: "skeleton"
+    children: ["spinal_cord_and_ribs"]
+    aliases: ["骨骼", "bones", "骨架"]
+    description: "Skeletal structure"
+  - name: "head_region"
+    children: ["head"]
+    aliases: ["头部", "head"]
+    description: "Head and cranial structure"
+
+guided_tours:
+  - name: "anatomy_overview"
+    description: "鲤鱼解剖结构概览"
+    steps:
+      - { action_type: "show", target: "all", narration: "这是一条鲤鱼的CT扫描三维重建。" }
+      - { action_type: "isolate", target: "skeleton", narration: "鲤鱼的骨骼提供结构支撑。" }
+      - { action_type: "isolate", target: "fins", narration: "鲤鱼有多种鳍，负责推进和稳定。" }
+      - { action_type: "highlight", target: "caudal_fin", narration: "尾鳍是推进和转向的关键。" }
+      - { action_type: "highlight", target: "pectoral_fin", narration: "胸鳍用于转向和制动。" }
+      - { action_type: "reset", target: "all" }

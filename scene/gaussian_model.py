@@ -78,6 +78,8 @@ class GaussianModel:
         self._rotation = torch.empty(0) # quaternion 4-dim
         self._rotation_q = torch.empty(0)
         self._opacity = torch.empty(0)
+        self._semantic_id = torch.empty(0, dtype=torch.int16, device="cuda")
+        self.semantic_label = -1
         self.max_radii2D = torch.empty(0)
         self.xyz_gradient_accum = torch.empty(0)
         self.normal_gradient_accum = torch.empty(0)
@@ -102,6 +104,11 @@ class GaussianModel:
         
     def set_num_GSs_TF(self, num_GSs_TF):
         self._num_GSs_TF = num_GSs_TF
+
+    def _resolve_semantic_ids(self, count):
+        if self._semantic_id.numel() == count:
+            return self._semantic_id.detach().cpu().numpy().astype(np.int16).reshape(-1, 1)
+        return np.full((count, 1), self.semantic_label, dtype=np.int16)
         
     @torch.no_grad()
     def set_transform(self, rotation=None, center=None, scale=None, offset=None, transform=None):
@@ -341,6 +348,9 @@ class GaussianModel:
         self.xyz_gradient_accum = xyz_gradient_accum
         self.normal_gradient_accum = normal_gradient_accum
         self.denom = denom
+        self._semantic_id = torch.full(
+            (self._xyz.shape[0],), self.semantic_label, dtype=torch.int16, device="cuda"
+        )
 
         if self.use_phong:
             if len(model_args) > 14:
@@ -391,6 +401,9 @@ class GaussianModel:
         self._opacity = nn.Parameter(opacities.requires_grad_(True))
         self._shs_dc = nn.Parameter(shs[:, :, 0:1].transpose(1, 2).contiguous().requires_grad_(True))
         self._shs_rest = nn.Parameter(shs[:, :, 1:].transpose(1, 2).contiguous().requires_grad_(True))
+        self._semantic_id = torch.full(
+            (fused_point_cloud.shape[0],), self.semantic_label, dtype=torch.int16, device="cuda"
+        )
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
 
         if self.use_phong: #* default init all zeros
@@ -552,13 +565,15 @@ class GaussianModel:
         dtype_full = [(attribute, float_type) 
                         if attribute in ['x', 'y', 'z'] else (attribute, attribute_type) 
                         for attribute in self.construct_list_of_attributes()]
+        dtype_full.append(("semantic_id", "i2"))
         gaussian_nums = xyz.shape[0]
         # ic(dtype_full)
         # ic(scale.shape[0])
         elements = np.empty(gaussian_nums, dtype=dtype_full)
         #!Note: the order need to be aligned with the order of construct_list_of_attributes
         # attributes = np.concatenate((xyz, normal, opacities, scaling, rotation, offset_color, diffuse_factor, shininess, ambient_factor, specular_factor), axis=1)
-        attributes = np.concatenate((xyz, opacities, normal, scaling, rotation, offset_color, diffuse_factor, shininess, ambient_factor, specular_factor), axis=1)
+        semantic_ids = self._resolve_semantic_ids(gaussian_nums)
+        attributes = np.concatenate((xyz, opacities, normal, scaling, rotation, offset_color, diffuse_factor, shininess, ambient_factor, specular_factor, semantic_ids), axis=1)
         elements[:] = list(map(tuple, attributes))
         elements_list.append(PlyElement.describe(elements, f'gaussians'))
             
@@ -775,6 +790,14 @@ class GaussianModel:
         (xyz.shape[0], 1, 3), dtype=torch.float, device="cuda").contiguous().requires_grad_(True))
         self._shs_rest = nn.Parameter(torch.zeros(
         (xyz.shape[0], (self.active_sh_degree+1)**2-1, 3), dtype=torch.float, device="cuda").contiguous().requires_grad_(True))
+        try:
+            semantic_ids = np.asarray(plydata.elements[0]["semantic_id"]).astype(np.int16)
+            self.semantic_label = int(semantic_ids[0]) if semantic_ids.size > 0 else self.semantic_label
+            self._semantic_id = torch.tensor(semantic_ids, dtype=torch.int16, device="cuda")
+        except (ValueError, KeyError):
+            self._semantic_id = torch.full(
+                (xyz.shape[0],), self.semantic_label, dtype=torch.int16, device="cuda"
+            )
         self.active_sh_degree = self.max_sh_degree
     
     def load_ply(self, path): #* for read compact save file
@@ -787,6 +810,11 @@ class GaussianModel:
                            np.asarray(plydata.elements[0]["ny"]),
                            np.asarray(plydata.elements[0]["nz"])), axis=1)
         opacities = np.asarray(plydata.elements[0]["opacity"])[..., np.newaxis]
+        try:
+            semantic_ids = np.asarray(plydata.elements[0]["semantic_id"]).astype(np.int16)
+            self.semantic_label = int(semantic_ids[0]) if semantic_ids.size > 0 else self.semantic_label
+        except (ValueError, KeyError):
+            semantic_ids = np.full((xyz.shape[0],), self.semantic_label, dtype=np.int16)
         
         if not self.use_phong: #* shs view dependent color 
             shs_dc = np.zeros((xyz.shape[0], 3, 1))
@@ -870,6 +898,11 @@ class GaussianModel:
                            np.asarray(plydata.elements[0]["ny"]),
                            np.asarray(plydata.elements[0]["nz"])), axis=1)
         opacities = np.asarray(plydata.elements[0]["opacity"])[..., np.newaxis]
+        try:
+            semantic_ids = np.asarray(plydata.elements[0]["semantic_id"]).astype(np.int16)
+            self.semantic_label = int(semantic_ids[0]) if semantic_ids.size > 0 else self.semantic_label
+        except (ValueError, KeyError):
+            semantic_ids = np.full((xyz.shape[0],), self.semantic_label, dtype=np.int16)
 
         shs_dc = np.zeros((xyz.shape[0], 3, 1))
         shs_dc[:, 0, 0] = np.asarray(plydata.elements[0]["f_dc_0"])
@@ -906,6 +939,7 @@ class GaussianModel:
             shs_dc, dtype=torch.float, device="cuda").transpose(1, 2).contiguous().requires_grad_(True))
         self._shs_rest = nn.Parameter(torch.tensor(
             shs_extra, dtype=torch.float, device="cuda").transpose(1, 2).contiguous().requires_grad_(True))
+        self._semantic_id = torch.tensor(semantic_ids, dtype=torch.int16, device="cuda")
 
         self.active_sh_degree = self.max_sh_degree
 
@@ -1280,9 +1314,11 @@ class GaussianModel:
             ])
 
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
+        dtype_full.append(("semantic_id", "i2"))
 
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
-        attributes = np.concatenate(attributes_list, axis=1)
+        semantic_ids = self._resolve_semantic_ids(xyz.shape[0])
+        attributes = np.concatenate(attributes_list + [semantic_ids], axis=1)
         elements[:] = list(map(tuple, attributes))
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)

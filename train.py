@@ -3,6 +3,7 @@
 # ic.configureOutput(includeContext=True) # type: ignore
 
 import os
+import json
 import torch
 import torch.nn.functional as F
 import torchvision
@@ -48,6 +49,10 @@ def training(dataset: ModelParams, opt: OptimizationParams, pipe: PipelineParams
                                         "point_cloud.ply"))
     else:
         gaussians.create_from_pcd(scene.scene_info.point_cloud, scene.cameras_extent)
+
+    if getattr(dataset, "semantic_id", -1) >= 0:
+        gaussians.semantic_label = dataset.semantic_id
+        print(f"[Semantic] Training component: {dataset.semantic_name} (id={dataset.semantic_id})")
 
     # exit()
     gaussians.training_setup(opt)
@@ -193,6 +198,18 @@ def training(dataset: ModelParams, opt: OptimizationParams, pipe: PipelineParams
         scene.gaussians.produce_clusters(store_dict_path=scene.model_path)
         scene.gaussians.apply_clustering(codebook_dict=scene.gaussians._codebook_dict)
         scene.save(iteration, quantised=True, half_float=True)
+
+    if getattr(dataset, "semantic_config", ""):
+        semantic_meta = {
+            "semantic_id": getattr(dataset, "semantic_id", -1),
+            "semantic_name": getattr(dataset, "semantic_name", ""),
+            "num_gaussians": int(gaussians.get_xyz.shape[0]),
+            "final_iteration": int(iteration),
+        }
+        meta_path = os.path.join(dataset.model_path, "semantic_meta.json")
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(semantic_meta, f, indent=2, ensure_ascii=False)
+        print(f"[Semantic] Saved semantic metadata: {meta_path}")
        
 
     # if dataset.eval:

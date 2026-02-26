@@ -1,0 +1,111 @@
+dataset: combustion
+description: "Combustion simulation dataset with 10 transfer function regions"
+components:
+  - tf_id: "TF01"
+    semantic_id: 1
+    name: "low_temperature_region"
+    parent: "cool_zones"
+    aliases: ["低温区", "cool region", "cold zone"]
+    description: "Low temperature region of the combustion field"
+    default_visual: { color: [0.0, 0.2, 0.8], opacity: 1.0 }
+
+  - tf_id: "TF02"
+    semantic_id: 2
+    name: "medium_low_temperature"
+    parent: "cool_zones"
+    aliases: ["中低温区", "warm region"]
+    description: "Medium-low temperature transition zone"
+    default_visual: { color: [0.0, 0.6, 0.6], opacity: 1.0 }
+
+  - tf_id: "TF03"
+    semantic_id: 3
+    name: "medium_temperature"
+    parent: "transition_zones"
+    aliases: ["中温区", "mid temperature"]
+    description: "Medium temperature region"
+    default_visual: { color: [0.2, 0.8, 0.2], opacity: 1.0 }
+
+  - tf_id: "TF04"
+    semantic_id: 4
+    name: "medium_high_temperature"
+    parent: "transition_zones"
+    aliases: ["中高温区"]
+    description: "Medium-high temperature zone approaching combustion core"
+    default_visual: { color: [0.6, 0.8, 0.0], opacity: 1.0 }
+
+  - tf_id: "TF05"
+    semantic_id: 5
+    name: "high_temperature"
+    parent: "hot_zones"
+    aliases: ["高温区", "hot zone"]
+    description: "High temperature combustion region"
+    default_visual: { color: [0.9, 0.6, 0.0], opacity: 1.0 }
+
+  - tf_id: "TF06"
+    semantic_id: 6
+    name: "flame_front"
+    parent: "hot_zones"
+    aliases: ["火焰前沿", "flame boundary"]
+    description: "Flame front where rapid oxidation occurs"
+    default_visual: { color: [1.0, 0.4, 0.0], opacity: 1.0 }
+
+  - tf_id: "TF07"
+    semantic_id: 7
+    name: "combustion_core"
+    parent: "hot_zones"
+    aliases: ["燃烧核心", "fire core", "hottest zone"]
+    description: "Core combustion region with highest temperature"
+    default_visual: { color: [1.0, 0.1, 0.0], opacity: 1.0 }
+
+  - tf_id: "TF08"
+    semantic_id: 8
+    name: "exhaust_plume"
+    parent: "byproducts"
+    aliases: ["排气羽流", "exhaust", "smoke plume"]
+    description: "Exhaust plume of combustion products"
+    default_visual: { color: [0.6, 0.3, 0.1], opacity: 0.8 }
+
+  - tf_id: "TF09"
+    semantic_id: 9
+    name: "turbulent_mixing"
+    parent: "byproducts"
+    aliases: ["湍流混合区", "turbulence zone"]
+    description: "Turbulent mixing region between fuel and oxidizer"
+    default_visual: { color: [0.5, 0.5, 0.5], opacity: 0.6 }
+
+  - tf_id: "TF10"
+    semantic_id: 10
+    name: "ambient_gas"
+    parent: "ambient"
+    aliases: ["环境气体", "surrounding gas", "background"]
+    description: "Ambient gas surrounding the combustion region"
+    default_visual: { color: [0.2, 0.2, 0.3], opacity: 0.3 }
+
+groups:
+  - name: "cool_zones"
+    children: ["low_temperature_region", "medium_low_temperature"]
+    aliases: ["冷区", "cool regions", "低温区域"]
+    description: "All low-temperature regions"
+  - name: "transition_zones"
+    children: ["medium_temperature", "medium_high_temperature"]
+    aliases: ["过渡区", "middle regions"]
+    description: "Temperature transition regions"
+  - name: "hot_zones"
+    children: ["high_temperature", "flame_front", "combustion_core"]
+    aliases: ["热区", "hot regions", "高温区域", "火焰区"]
+    description: "All high-temperature and combustion regions"
+  - name: "byproducts"
+    children: ["exhaust_plume", "turbulent_mixing"]
+    aliases: ["副产物", "byproducts", "废气"]
+    description: "Combustion byproducts and mixing regions"
+
+guided_tours:
+  - name: "temperature_gradient"
+    description: "从低温到高温逐步展示"
+    steps:
+      - { action_type: "show", target: "all", narration: "这是一个燃烧模拟数据集，包含多个温度区域。" }
+      - { action_type: "isolate", target: "cool_zones", narration: "首先是低温区域，包括远离燃烧核心的冷区。" }
+      - { action_type: "isolate", target: "transition_zones", narration: "接着是过渡区域，温度逐渐升高。" }
+      - { action_type: "isolate", target: "hot_zones", narration: "最核心的高温区域，包括火焰前沿和燃烧核心。" }
+      - { action_type: "highlight", target: "combustion_core", narration: "燃烧核心是温度最高的区域。" }
+      - { action_type: "reset", target: "all" }

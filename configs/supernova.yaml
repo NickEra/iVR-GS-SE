@@ -1,0 +1,23 @@
+dataset: supernova
+description: "Example semantic config for supernova dataset"
+components:
+  - tf_id: "TF01"
+    semantic_id: 1
+    name: "stellar_core"
+    aliases: ["恒星核心", "core"]
+    description: "Dense bright core region"
+    default_visual: { color: [1.0, 0.7, 0.2], opacity: 1.0 }
+
+  - tf_id: "TF02"
+    semantic_id: 2
+    name: "shock_front"
+    aliases: ["冲击前沿", "shock wave"]
+    description: "Shock propagation shell"
+    default_visual: { color: [1.0, 0.2, 0.1], opacity: 0.9 }
+
+  - tf_id: "TF03"
+    semantic_id: 3
+    name: "interstellar_gas"
+    aliases: ["星际气体", "background gas"]
+    description: "Diffuse surrounding gas"
+    default_visual: { color: [0.2, 0.4, 0.9], opacity: 0.4 }
