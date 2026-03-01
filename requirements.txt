@@ -1,23 +1,7 @@
-# ============================================================
-# iVR-GS  —  Python 3.9.x, CUDA 11.8
-#
-# Full install (one-shot):
-#   pip install -r requirements.txt
-#
-# CUDA extensions are compiled in-place during the above command.
-# If compilation fails, install them separately:
-#   pip install -e ./submodules/diff-gaussian-rasterization
-#   pip install -e ./submodules/simple-knn
-# ============================================================
-
 # ── PyTorch (CUDA 11.8 build, fetched from PyTorch index) ──
 --extra-index-url https://download.pytorch.org/whl/cu118
 torch==2.1.2+cu118
 torchvision==0.16.2+cu118
-
-# ── CUDA extensions (compiled from local source) ─────────────
--e ./submodules/diff-gaussian-rasterization
--e ./submodules/simple-knn
 
 # ── Build tools ───────────────────────────────────────────────
 setuptools==63.4.1
