@@ -101,11 +101,11 @@ groups:
 
 guided_tours:
   - name: "temperature_gradient"
-    description: "从低温到高温逐步展示"
+    description: "Step-by-step tour from low to high temperature regions"
     steps:
-      - { action_type: "show", target: "all", narration: "这是一个燃烧模拟数据集，包含多个温度区域。" }
-      - { action_type: "isolate", target: "cool_zones", narration: "首先是低温区域，包括远离燃烧核心的冷区。" }
-      - { action_type: "isolate", target: "transition_zones", narration: "接着是过渡区域，温度逐渐升高。" }
-      - { action_type: "isolate", target: "hot_zones", narration: "最核心的高温区域，包括火焰前沿和燃烧核心。" }
-      - { action_type: "highlight", target: "combustion_core", narration: "燃烧核心是温度最高的区域。" }
+      - { action_type: "show", target: "all", narration: "This is a combustion simulation dataset containing multiple temperature regions." }
+      - { action_type: "isolate", target: "cool_zones", narration: "First, the low-temperature regions, far from the combustion core." }
+      - { action_type: "isolate", target: "transition_zones", narration: "Next, the transition zones where temperature gradually increases." }
+      - { action_type: "isolate", target: "hot_zones", narration: "The hottest regions, including the flame front and combustion core." }
+      - { action_type: "highlight", target: "combustion_core", narration: "The combustion core is the highest temperature region." }
       - { action_type: "reset", target: "all" }

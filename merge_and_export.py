@@ -8,8 +8,10 @@ import os
 import sys
 import json
 import argparse
+import io as _io
 import numpy as np
 from plyfile import PlyData, PlyElement
+from PIL import Image as PILImage
 
 from semantic_config import SemanticConfig
 
@@ -232,6 +234,124 @@ def export_semantic_dict(config, comp_stats, spatial_relations, output_path):
     print(f"Exported dict: {output_path} ({len(components)} components, {len(groups)} groups)")
 
 
+def generate_review(output_dir, ply_path, semantic_dict, max_points=60000):
+    """Render 6-direction PNGs and a rotating GIF for the merged point cloud."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    review_dir = os.path.join(output_dir, "review")
+    os.makedirs(review_dir, exist_ok=True)
+
+    # Load PLY
+    plydata = PlyData.read(ply_path)
+    vertex = _get_vertex_element(plydata)
+    n = len(vertex)
+    print(f"[Review] Loaded {n:,} gaussians from PLY")
+
+    # Build semantic_id -> RGB color map from default_visual
+    color_map = {}
+    for comp in semantic_dict.get("components", []):
+        sid = comp["semantic_id"]
+        c = comp.get("default_visual", {}).get("color", [0.65, 0.65, 0.65])
+        color_map[sid] = np.clip(np.array(c, dtype=np.float32), 0.0, 1.0)
+
+    # Extract xyz + semantic_id
+    xyz = np.stack(
+        [np.array(vertex["x"], dtype=np.float32),
+         np.array(vertex["y"], dtype=np.float32),
+         np.array(vertex["z"], dtype=np.float32)], axis=1)
+
+    prop_names = vertex.dtype.names if hasattr(vertex.dtype, "names") else []
+    if "semantic_id" in prop_names:
+        sids = np.array(vertex["semantic_id"], dtype=np.int32)
+    else:
+        sids = np.zeros(n, dtype=np.int32)
+
+    # Subsample
+    if n > max_points:
+        idx = np.random.default_rng(42).choice(n, max_points, replace=False)
+        xyz = xyz[idx]
+        sids = sids[idx]
+        print(f"[Review] Subsampled to {max_points:,} points for rendering")
+
+    # Assign per-point RGB
+    colors = np.full((len(xyz), 3), 0.5, dtype=np.float32)
+    for sid, color in color_map.items():
+        mask = sids == sid
+        if mask.any():
+            colors[mask] = color
+
+    # Center and normalise to [-1, 1]
+    center = xyz.mean(axis=0)
+    xyz = xyz - center
+    scale = np.abs(xyz).max()
+    if scale > 0:
+        xyz /= scale
+
+    BG = "#111111"
+    marker_size = max(0.3, 3000.0 / len(xyz))
+
+    def make_frame(elev, azim):
+        fig = plt.figure(figsize=(5, 5), facecolor=BG)
+        ax = fig.add_subplot(111, projection="3d", facecolor=BG)
+        ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
+                   c=colors, s=marker_size, alpha=0.75,
+                   linewidths=0, rasterized=True)
+        ax.view_init(elev=elev, azim=azim)
+        ax.set_axis_off()
+        lim = 0.92
+        ax.set_xlim(-lim, lim)
+        ax.set_ylim(-lim, lim)
+        ax.set_zlim(-lim, lim)
+        plt.tight_layout(pad=0)
+        return fig
+
+    def fig_to_pil(fig, dpi):
+        buf = _io.BytesIO()
+        fig.savefig(buf, format="png", dpi=dpi,
+                    bbox_inches="tight", facecolor=BG, pad_inches=0.05)
+        plt.close(fig)
+        buf.seek(0)
+        return PILImage.open(buf).convert("RGB")
+
+    # 6-direction stills
+    directions = [
+        ("front",    0,   0),
+        ("back",     0, 180),
+        ("left",     0,  90),
+        ("right",    0, 270),
+        ("top",     90,   0),
+        ("bottom",  -90,  0),
+    ]
+    for name, elev, azim in directions:
+        img = fig_to_pil(make_frame(elev, azim), dpi=150)
+        out_path = os.path.join(review_dir, f"{name}.png")
+        img.save(out_path)
+        print(f"[Review] Saved {name}.png")
+
+    # Rotating GIF (360° orbit at 25° elevation, 24 frames, 12 fps)
+    n_frames = 24
+    gif_frames = []
+    for i in range(n_frames):
+        azim = i * (360.0 / n_frames)
+        gif_frames.append(fig_to_pil(make_frame(elev=25, azim=azim), dpi=80))
+        if (i + 1) % 8 == 0:
+            print(f"[Review] GIF progress: {i + 1}/{n_frames} frames")
+
+    gif_path = os.path.join(review_dir, "rotating.gif")
+    gif_frames[0].save(
+        gif_path,
+        save_all=True,
+        append_images=gif_frames[1:],
+        optimize=False,
+        duration=int(1000 / 12),
+        loop=0,
+    )
+    print(f"[Review] Saved rotating.gif ({n_frames} frames @ 12 fps)")
+    print(f"[Review] Review assets → {review_dir}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -256,9 +376,14 @@ def main():
     json_path = os.path.join(args.output_dir, "semantic_dict.json")
     export_semantic_dict(config, stats, spatial, json_path)
 
+    with open(json_path, "r", encoding="utf-8") as f:
+        semantic_dict = json.load(f)
+    generate_review(args.output_dir, ply_path, semantic_dict)
+
     print("\n" + "=" * 50)
     print(f"  PLY:  {ply_path}")
     print(f"  JSON: {json_path}")
+    print(f"  Review: {os.path.join(args.output_dir, 'review')}")
     print("=" * 50)
 
 

@@ -28,7 +28,7 @@ for c in cfg['components']:
     python train.py \
         --eval \
         -s "$DATA_ROOT/$tf_id" \
-        -m "$OUTPUT_ROOT/$sem_name/3dgs" \
+        -m "$OUTPUT_ROOT/$tf_id/3dgs" \
         --semantic_config "$CONFIG" \
         --semantic_name "$sem_name" \
         --semantic_id "$sem_id" \
@@ -44,5 +44,12 @@ for c in cfg['components']:
 done
 
 echo "All semantic components finished."
-echo "Next step:"
-echo "python merge_and_export.py --config $CONFIG --model_root $OUTPUT_ROOT --output_dir unity_export/$DATASET --iteration $ITERATION"
+echo "========================================"
+echo "Merging and exporting..."
+echo "========================================"
+
+python merge_and_export.py \
+    --config "$CONFIG" \
+    --model_root "$OUTPUT_ROOT" \
+    --output_dir "$OUTPUT_ROOT/unified_$DATASET" \
+    --iteration "$ITERATION"

@@ -3,3 +3,8 @@ output/
 build/
 diff_gaussian_rasterization.egg-info/
 simple_knn.egg-info/
+Data/
+Data.zip
+output.zip
+.claude/
+submodules/**/*.egg-info/

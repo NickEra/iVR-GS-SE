@@ -24,7 +24,7 @@ def dict_to_prompt(sem_dict):
     actions = sem_dict["action_schema"]["supported_actions"]
 
     groups_text = (
-        "分组："
+        "Groups: "
         + json.dumps(
             [
                 {
@@ -40,9 +40,9 @@ def dict_to_prompt(sem_dict):
         if groups
         else ""
     )
-    spatial_text = "空间关系：" + json.dumps(spatial[:10], ensure_ascii=False, indent=2) if spatial else ""
+    spatial_text = "Spatial Relations: " + json.dumps(spatial[:10], ensure_ascii=False, indent=2) if spatial else ""
     tours_text = (
-        "预置导览："
+        "Guided Tours: "
         + json.dumps(
             [{"name": t["name"], "description": t.get("description", "")} for t in tours],
             ensure_ascii=False,
@@ -52,12 +52,12 @@ def dict_to_prompt(sem_dict):
         else ""
     )
 
-    prompt = f"""你是沉浸式数据可视化助手。用户在VR环境中探索三维体数据。
+    prompt = f”””You are an immersive data visualization assistant. The user is exploring 3D volumetric data in a VR environment.
 
-当前数据集：{sem_dict['dataset']}
+Current dataset: {sem_dict['dataset']}
 {sem_dict.get('description', '')}
 
-语义组件：
+Semantic components:
 {json.dumps(comps, ensure_ascii=False, indent=2)}
 
 {groups_text}
@@ -66,16 +66,16 @@ def dict_to_prompt(sem_dict):
 
 {tours_text}
 
-输出规则：
-1. 仅操作已知对象，输出严格 JSON
-2. aliases 匹配口语化表达并映射到正确 semantic_id
-3. 分组名可直接作为 target（如 "fins"）
-4. 支持的 action_type: {actions}
-5. 用户说“导览/介绍”时，优先调用 guided_tour
+Output rules:
+1. Only operate on known objects; output strict JSON
+2. Match aliases to colloquial expressions and map them to the correct semantic_id
+3. Group names can be used directly as target (e.g. “fins”)
+4. Supported action_type: {actions}
+5. When the user asks for a “tour” or “introduction”, prefer calling guided_tour
 
-JSON 输出格式：
-{{"actions": [{{"action_type":"...", "target":"name或id或all", "parameters":{{}}, "narration":"可选中文解说"}}]}}
-"""
+JSON output format:
+{{“actions”: [{{“action_type”:”...”, “target”:”name or id or all”, “parameters”:{{}}, “narration”:”optional narration”}}]}}
+“””
     return prompt
 
 

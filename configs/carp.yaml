@@ -73,11 +73,11 @@ groups:
 
 guided_tours:
   - name: "anatomy_overview"
-    description: "鲤鱼解剖结构概览"
+    description: "Carp anatomy overview"
     steps:
-      - { action_type: "show", target: "all", narration: "这是一条鲤鱼的CT扫描三维重建。" }
-      - { action_type: "isolate", target: "skeleton", narration: "鲤鱼的骨骼提供结构支撑。" }
-      - { action_type: "isolate", target: "fins", narration: "鲤鱼有多种鳍，负责推进和稳定。" }
-      - { action_type: "highlight", target: "caudal_fin", narration: "尾鳍是推进和转向的关键。" }
-      - { action_type: "highlight", target: "pectoral_fin", narration: "胸鳍用于转向和制动。" }
+      - { action_type: "show", target: "all", narration: "This is a 3D reconstruction from a CT scan of a carp." }
+      - { action_type: "isolate", target: "skeleton", narration: "The skeleton of the carp provides structural support." }
+      - { action_type: "isolate", target: "fins", narration: "The carp has multiple fins responsible for propulsion and stability." }
+      - { action_type: "highlight", target: "caudal_fin", narration: "The caudal fin is key for propulsion and steering." }
+      - { action_type: "highlight", target: "pectoral_fin", narration: "The pectoral fins are used for steering and braking." }
       - { action_type: "reset", target: "all" }

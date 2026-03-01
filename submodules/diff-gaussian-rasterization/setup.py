@@ -33,8 +33,10 @@ setup(
                 "ext.cpp"],
             extra_compile_args={
                 "nvcc": ["-I" + os.path.join(os.path.dirname(os.path.abspath(__file__)), "third_party/glm/"),
-                         "-O3"],
-                "cxx": ["-O3"]}) #-03 is for gcc complier, '/w' is for MSVC complier
+                         "-O3",
+                         "--allow-unsupported-compiler",
+                         "-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"],
+                "cxx": ["-O3", "/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]}) #-03 is for gcc complier, '/w' is for MSVC complier
     ],
     cmdclass={
         'build_ext': BuildExtension

@@ -10,11 +10,11 @@ import re
 
 class LocalMatcher:
     PATTERNS = [
-        (r"(?:显示|展示|show)\s*(.+)", "show"),
-        (r"(?:隐藏|关闭|hide)\s*(.+)", "hide"),
-        (r"(?:高亮|强调|highlight)\s*(.+)", "highlight"),
-        (r"(?:只看|只显示|isolate)\s*(.+)", "isolate"),
-        (r"(?:重置|reset|恢复)", "reset"),
+        (r"(?:show)\s*(.+)", "show"),
+        (r"(?:hide)\s*(.+)", "hide"),
+        (r"(?:highlight)\s*(.+)", "highlight"),
+        (r"(?:isolate)\s*(.+)", "isolate"),
+        (r"(?:reset)", "reset"),
     ]
 
     def __init__(self, sem_dict):
@@ -136,7 +136,7 @@ def main():
 
         if llm_client:
             messages = [{"role": "system", "content": system_prompt}]
-            messages.append({"role": "system", "content": f"当前场景状态: {json.dumps(state.summary(), ensure_ascii=False)}"})
+            messages.append({"role": "system", "content": f"Current scene state: {json.dumps(state.summary(), ensure_ascii=False)}"})
             messages.extend(history)
             messages.append({"role": "user", "content": user_input})
 
